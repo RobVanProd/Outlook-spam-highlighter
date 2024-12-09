@@ -3,6 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const { logger, apiLogger } = require('./src/utils/logger');
 
 const app = express();
 const port = 3000;
@@ -13,6 +14,9 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     next();
 });
+
+// Add API logging middleware
+app.use(apiLogger);
 
 // Serve static files from the src directory
 app.use(express.static('src'));
@@ -30,9 +34,15 @@ const cloudmersiveClient = axios.create({
 
 // API endpoint for spam detection
 app.post('/api/analyze-text', async (req, res) => {
+    const startTime = Date.now();
     try {
         const { text } = req.body;
         
+        logger.info('Analyzing text for spam', {
+            textLength: text.length,
+            timestamp: new Date().toISOString()
+        });
+
         const response = await cloudmersiveClient.post('/spam/check/text', {
             TextToScan: text
         });
@@ -42,6 +52,15 @@ app.post('/api/analyze-text', async (req, res) => {
         const isSpam = spamAnalysis.IsSpam;
         const spamConfidenceScore = spamAnalysis.SpamConfidenceScore;
         
+        const duration = Date.now() - startTime;
+        
+        logger.info('Spam analysis complete', {
+            isSpam,
+            spamConfidenceScore,
+            duration: `${duration}ms`,
+            timestamp: new Date().toISOString()
+        });
+
         // Return analysis results
         res.json({
             isSpam,
@@ -49,7 +68,15 @@ app.post('/api/analyze-text', async (req, res) => {
             analysis: spamAnalysis
         });
     } catch (error) {
-        console.error('Error analyzing text:', error);
+        const duration = Date.now() - startTime;
+        
+        logger.error('Error analyzing text', {
+            error: error.message,
+            stack: error.stack,
+            duration: `${duration}ms`,
+            timestamp: new Date().toISOString()
+        });
+
         res.status(500).json({ 
             error: 'Error analyzing text',
             details: error.message 
@@ -73,6 +100,11 @@ const options = {
 };
 
 https.createServer(options, app).listen(port, () => {
+    logger.info(`Server started`, {
+        port,
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
     console.log(`Server running at https://localhost:${port}`);
     console.log(`Test page available at https://localhost:${port}/test`);
 });

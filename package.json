@@ -16,7 +16,8 @@
     "@types/office-js": "^1.0.0",
     "@types/office-runtime": "^1.0.0",
     "axios": "^1.7.9",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "office-addin-debugging": "^4.0.0",
