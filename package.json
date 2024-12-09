@@ -15,6 +15,7 @@
     "@microsoft/office-js": "^1.1.0",
     "@types/office-js": "^1.0.0",
     "@types/office-runtime": "^1.0.0",
+    "axios": "^1.7.9",
     "express": "^4.21.2"
   },
   "devDependencies": {

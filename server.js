@@ -2,6 +2,7 @@ const express = require('express');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const axios = require('axios');
 
 const app = express();
 const port = 3000;
@@ -15,19 +16,45 @@ app.use((req, res, next) => {
 
 // Serve static files from the src directory
 app.use(express.static('src'));
+app.use(express.json());
 
-// Mock API endpoint for spam terms
-app.get('/api/spam-terms', (req, res) => {
-    const mockSpamTerms = [
-        "urgent",
-        "lottery winner",
-        "wire transfer",
-        "bank details",
-        "prize money",
-        "inheritance",
-        "Nigerian prince"
-    ];
-    res.json({ spamTerms: mockSpamTerms });
+// Cloudmersive API configuration
+const CLOUDMERSIVE_API_KEY = process.env.CLOUDMERSIVE_API_KEY || 'YOUR_API_KEY';
+const cloudmersiveClient = axios.create({
+    baseURL: 'https://api.cloudmersive.com/virus/scan/text',
+    headers: {
+        'Apikey': CLOUDMERSIVE_API_KEY,
+        'Content-Type': 'application/json'
+    }
+});
+
+// API endpoint for spam detection
+app.post('/api/analyze-text', async (req, res) => {
+    try {
+        const { text } = req.body;
+        
+        const response = await cloudmersiveClient.post('/spam/check/text', {
+            TextToScan: text
+        });
+
+        // Extract spam terms and confidence scores
+        const spamAnalysis = response.data;
+        const isSpam = spamAnalysis.IsSpam;
+        const spamConfidenceScore = spamAnalysis.SpamConfidenceScore;
+        
+        // Return analysis results
+        res.json({
+            isSpam,
+            spamConfidenceScore,
+            analysis: spamAnalysis
+        });
+    } catch (error) {
+        console.error('Error analyzing text:', error);
+        res.status(500).json({ 
+            error: 'Error analyzing text',
+            details: error.message 
+        });
+    }
 });
 
 // Serve the manifest file
