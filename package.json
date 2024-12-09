@@ -1,0 +1,25 @@
+{
+  "name": "outlook-spam-highlighter",
+  "version": "1.0.0",
+  "description": "Outlook add-in that highlights potential spam terms using AI-powered detection",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "office-addin-debugging build manifest.xml",
+    "validate": "office-addin-manifest validate manifest.xml",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@microsoft/office-js": "^1.1.0",
+    "@types/office-js": "^1.0.0",
+    "@types/office-runtime": "^1.0.0",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "office-addin-debugging": "^4.0.0",
+    "office-addin-dev-certs": "^1.7.0",
+    "office-addin-manifest": "^1.7.0"
+  }
+}

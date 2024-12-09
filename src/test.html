@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Spam Term Highlighter Test</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-email {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background-color: #e6ffe6; }
+        .error { background-color: #ffe6e6; }
+    </style>
+</head>
+<body>
+    <h1>Spam Term Highlighter Test Page</h1>
+    
+    <div class="test-email">
+        <h3>Test Email Content:</h3>
+        <div id="emailContent" contenteditable="true">
+            Dear Sir/Madam,
+
+            URGENT: You have won the lottery! A prize money of $1,000,000 is waiting for you.
+            
+            I am a Nigerian prince and I need your help with a wire transfer.
+            Please send your bank details as soon as possible to claim your inheritance.
+            
+            Best regards,
+            Prince John
+        </div>
+    </div>
+
+    <button id="testButton" class="ms-Button">
+        <span class="ms-Button-label">Test Spam Detection</span>
+    </button>
+
+    <div id="result" class="result"></div>
+
+    <script>
+        document.getElementById('testButton').onclick = async function() {
+            try {
+                const emailContent = document.getElementById('emailContent').innerText;
+                const resultDiv = document.getElementById('result');
+                
+                // Get spam terms from our API
+                const response = await fetch('https://localhost:3000/api/spam-terms');
+                const data = await response.json();
+                const spamTerms = data.spamTerms;
+                
+                // Check for spam terms
+                const foundTerms = new Set();
+                spamTerms.forEach(term => {
+                    if (emailContent.toLowerCase().includes(term.toLowerCase())) {
+                        foundTerms.add(term);
+                    }
+                });
+                
+                // Display results
+                if (foundTerms.size > 0) {
+                    const highlightedContent = emailContent.replace(
+                        new RegExp(Array.from(foundTerms).join("|"), "gi"),
+                        match => `<mark>${match}</mark>`
+                    );
+                    
+                    resultDiv.innerHTML = `
+                        <div class="warning">
+                            <h4>Spam Terms Found:</h4>
+                            <p>${Array.from(foundTerms).join(", ")}</p>
+                            <h4>Highlighted Content:</h4>
+                            <div>${highlightedContent}</div>
+                        </div>
+                    `;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.innerHTML = "No spam terms detected";
+                    resultDiv.className = 'result';
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+                document.getElementById('result').className = 'result error';
+            }
+        };
+    </script>
+</body>
+</html>
